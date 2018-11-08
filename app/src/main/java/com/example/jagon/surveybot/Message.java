@@ -6,11 +6,13 @@ public class Message {
     private String id;
     private String moduleName;
     private String message;
+    private String userId;
 
-    public Message(String moduleName, String message) {
+    public Message(String moduleName, String message, String userId) {
         this.id = UUID.randomUUID().toString();
         this.moduleName = moduleName;
         this.message = message;
+        this.userId = userId;
     }
 
     public String getId() {
@@ -37,12 +39,21 @@ public class Message {
         this.message = message;
     }
 
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
     @Override
     public String toString() {
         return "Message{" +
                 "id='" + id + '\'' +
-                "moduleName='" + moduleName + '\'' +
+                ", moduleName='" + moduleName + '\'' +
                 ", message='" + message + '\'' +
+                ", userId='" + userId + '\'' +
                 '}';
     }
 }

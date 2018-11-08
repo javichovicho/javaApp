@@ -5,6 +5,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -12,6 +14,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -28,8 +32,12 @@ public class ChatActivity extends AppCompatActivity {
     private Message message;
     private Message botMessage;
     private EditText chatEditText;
+    private ListView chatListView;
 
     private ArrayList<String> messages;
+
+    private static final String STATE_ITEMS = "messages";
+
     private ArrayAdapter<String> adapter;
 
     private int counter = 0;
@@ -39,6 +47,9 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+        getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
         Intent intent = getIntent();
         activeModule = intent.getStringExtra("moduleName");
@@ -54,22 +65,44 @@ public class ChatActivity extends AppCompatActivity {
 
         ListView chatListView = (ListView)findViewById(R.id.chatListView);
 
-        messages = new ArrayList<>();
-        messages.add("Hello, welcome to the " + activeModule + " module survey, how are you today?");
+        if (savedInstanceState != null) {
+            messages = (ArrayList<String>)savedInstanceState.getSerializable(STATE_ITEMS);
+        }else{
+            messages = new ArrayList<>();
+            messages.add("Hello, welcome to the " + activeModule + " module survey, how are you today?");
+        }
 
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, messages);
         chatListView.setAdapter(adapter);
+
+        chatEditText = (EditText)findViewById(R.id.chatEditText);
+
+        ViewGroup.LayoutParams params = chatListView.getLayoutParams();
+        if(params.height <= 488) {
+            Log.i("Info", "Keyboard visible");
+            Toast.makeText(ChatActivity.this,  "Keyboard open!!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void sendChat(View view){
+
+        ListView chatListView = (ListView)findViewById(R.id.chatListView);
+        ViewGroup.LayoutParams params = chatListView.getLayoutParams();
+        params.height = 488;
+        chatListView.setLayoutParams(params);
+
         chatEditText = (EditText)findViewById(R.id.chatEditText);
 
-        message = new Message(activeModule, chatEditText.getText().toString());
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String uid = user.getUid();
+
+        message = new Message(activeModule, chatEditText.getText().toString(), uid);
         messages.add("> " + message.getMessage());
 
         adapter.notifyDataSetChanged();
 
         String id = message.getId();
+
         //DatabaseReference messagesRef = myRef.child("messages").child(id).setValue(message);
         myRef.child("messages").child(id).setValue(message);
         //messagesRef.setValue(message);
@@ -87,6 +120,7 @@ public class ChatActivity extends AppCompatActivity {
         }*/
 
         sendResponse();
+        chatListView.setSelection(adapter.getCount() - 1);
     }
 
     public void sendResponse(){
@@ -110,13 +144,19 @@ public class ChatActivity extends AppCompatActivity {
         }
         counter++;
         if(counter > 1){
-            messages.remove(0);
-            messages.remove(1);
+            // messages.remove(0);
+            // messages.remove(1);
             adapter.notifyDataSetChanged();
         }
-        botMessage = new Message(activeModule, "Bot said: " + response);
+        String botId = "Bot";
+        botMessage = new Message(activeModule, "Bot said: " + response, botId);
         String responseId = botMessage.getId();
         myRef.child("messages").child(responseId).setValue(botMessage);
+    }
+
+    protected void onSaveInstanceState(Bundle outState){
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(STATE_ITEMS, messages);
     }
 
 }
