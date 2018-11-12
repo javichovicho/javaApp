@@ -77,11 +77,6 @@ public class ChatActivity extends AppCompatActivity {
 
         chatEditText = (EditText)findViewById(R.id.chatEditText);
 
-        ViewGroup.LayoutParams params = chatListView.getLayoutParams();
-        if(params.height <= 488) {
-            Log.i("Info", "Keyboard visible");
-            Toast.makeText(ChatActivity.this,  "Keyboard open!!", Toast.LENGTH_SHORT).show();
-        }
     }
 
     public void sendChat(View view){
