@@ -40,7 +40,7 @@ public class ChatActivity extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private FirebaseUser user;
     private String userId;
-    private String mensaje;
+    private Message mensaje;
 
     private Message message;
     private Message botMessage;
@@ -48,7 +48,6 @@ public class ChatActivity extends AppCompatActivity {
     private ListView chatListView;
 
     private DatabaseReference conversationReference;
-    private ArrayList<String> oldMessages;
     private ArrayList<String> messages;
 
     private static final String STATE_ITEMS = "messages";
@@ -58,7 +57,7 @@ public class ChatActivity extends AppCompatActivity {
     private int counter = 0;
     private String response = "";
 
-    private boolean keyboardVisible = false;
+    private boolean messageHistoryNotRetrieved = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,13 +71,15 @@ public class ChatActivity extends AppCompatActivity {
         activeModule = intent.getStringExtra("moduleName");
 
         setTitle(activeModule);
-
         Log.i("Info", activeModule);
+        firebaseAuth = FirebaseAuth.getInstance();
+        user = firebaseAuth.getCurrentUser();
+        userId = user.getUid();
 
         database = FirebaseDatabase.getInstance();
         myRef = database.getReference("data");
 
-        ListView chatListView = (ListView)findViewById(R.id.chatListView);
+        chatListView = (ListView)findViewById(R.id.chatListView);
 
         if (savedInstanceState != null) {
             messages = (ArrayList<String>)savedInstanceState.getSerializable(STATE_ITEMS);
@@ -89,7 +90,33 @@ public class ChatActivity extends AppCompatActivity {
         }
 
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, messages);
-        chatListView.setAdapter(adapter);
+        if(messageHistoryNotRetrieved){
+            mensaje = new Message();
+            conversationReference = database.getReference("data/messages");
+            // If addValueEventListener method was used it would update constantly
+            // Another alternative is addChildEventListener(new ChildEventListener)
+            conversationReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    for(DataSnapshot snapshot: dataSnapshot.getChildren()){
+                        mensaje = snapshot.getValue(Message.class);
+                        if((mensaje.getUserId().equals(userId) || mensaje.getUserId().equals("Bot")) &&
+                                mensaje.getModuleName().equals(activeModule)){
+                            Log.i("Message retrieved", mensaje.getMessage());
+                            String temp = mensaje.getMessage();
+                            messages.add(temp);
+                        }
+                        chatListView.setAdapter(adapter);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+            messageHistoryNotRetrieved = false;
+        }
 
         chatEditText = (EditText)findViewById(R.id.chatEditText);
 
@@ -102,7 +129,6 @@ public class ChatActivity extends AppCompatActivity {
                     params.height = 950;
                     chatListView.setLayoutParams(params);
                     chatListView.setSelection(adapter.getCount() - 1);
-                    keyboardVisible = false;
                 }
                 return false;
             }
@@ -115,7 +141,6 @@ public class ChatActivity extends AppCompatActivity {
                 params.height = 488;
                 chatListView.setLayoutParams(params);
                 chatListView.setSelection(adapter.getCount() - 1);
-                keyboardVisible = true;
             }
         });
 
@@ -182,9 +207,5 @@ public class ChatActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putSerializable(STATE_ITEMS, messages);
     }
-
-    /*private void getSavedConversation(){
-
-    }*/
 
 }
