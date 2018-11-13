@@ -47,9 +47,6 @@ public class SecondActivity extends AppCompatActivity {
     private DatabaseReference databaseReferenceModules;
     private FirebaseDatabase database;
 
-    private ArrayList<User> users;
-    private ArrayAdapter<User> adapter;
-    private User usuario;
     private Module module1;
     private ListView modulesListView;
 
@@ -72,8 +69,6 @@ public class SecondActivity extends AppCompatActivity {
 
         databaseReference = FirebaseDatabase.getInstance().getReference();
         databaseReferenceChild = databaseReference.child("User data").child("users").child(userId);
-
-        usuario = new User();
 
         databaseReferenceChild.addValueEventListener(new ValueEventListener() {
             @Override
@@ -101,13 +96,6 @@ public class SecondActivity extends AppCompatActivity {
             }
         });
 
-        // Uploading a model to the database
-        /*
-        Module module1 = new Module("Introduction to Databases");
-        database = FirebaseDatabase.getInstance();
-        databaseReferenceModules = database.getReference("Module data");
-        databaseReferenceModules.child("modules").child(module1.getId()).setValue(module1);
-        */
         // Retrieving a list of all models in database
         arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, modules);
         module1 = new Module();
@@ -136,6 +124,10 @@ public class SecondActivity extends AppCompatActivity {
         finish();
         startActivity(new Intent(SecondActivity.this, MainActivity.class));
     }
+    private void openModuleCreationActivity(){
+        finish();
+        startActivity(new Intent(SecondActivity.this, ModuleCreationActivity.class));
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -150,6 +142,9 @@ public class SecondActivity extends AppCompatActivity {
         switch(item.getItemId()){
             case R.id.logoutButton:{
                 logout();
+            }
+            case R.id.moduleCreation:{
+                openModuleCreationActivity();
             }
         }
         return super.onOptionsItemSelected(item);

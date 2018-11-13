@@ -88,8 +88,8 @@ public class ChatActivity extends AppCompatActivity {
             messages.add("Hello, welcome to the " + activeModule +
                     " module survey, how are you today?");
         }
-
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, messages);
+        chatListView.setAdapter(adapter);
         if(messageHistoryNotRetrieved){
             mensaje = new Message();
             conversationReference = database.getReference("data/messages");
@@ -161,7 +161,6 @@ public class ChatActivity extends AppCompatActivity {
 
         String id = message.getId();
 
-        //DatabaseReference messagesRef = myRef.child("messages").child(id).setValue(message);
         myRef.child("messages").child(id).setValue(message);
 
         Log.i("Message saved", message.toString());
@@ -198,7 +197,7 @@ public class ChatActivity extends AppCompatActivity {
             adapter.notifyDataSetChanged();
         }
         String botId = "Bot";
-        botMessage = new Message(activeModule, "Bot said: " + response, botId);
+        botMessage = new Message(activeModule, response, botId);
         String responseId = botMessage.getId();
         myRef.child("messages").child(responseId).setValue(botMessage);
     }

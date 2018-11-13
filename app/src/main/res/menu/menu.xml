@@ -9,4 +9,11 @@
         android:title="Logout">
     </item>
 
+    <item
+        android:id="@+id/moduleCreation"
+        android:orderInCategory="200"
+        app:showAsAction="never"
+        android:title="Module">
+    </item>
+
 </menu>
