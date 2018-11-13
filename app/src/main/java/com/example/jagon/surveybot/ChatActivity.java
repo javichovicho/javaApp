@@ -1,39 +1,54 @@
 package com.example.jagon.surveybot;
 
 import android.content.Intent;
+import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
 public class ChatActivity extends AppCompatActivity {
 
     private String activeModule = "";
-    //private Button sendChatButton;
 
     private FirebaseDatabase database;
     private DatabaseReference myRef;
+    private FirebaseAuth firebaseAuth;
+    private FirebaseUser user;
+    private String userId;
+    private String mensaje;
 
     private Message message;
     private Message botMessage;
     private EditText chatEditText;
     private ListView chatListView;
 
+    private DatabaseReference conversationReference;
+    private ArrayList<String> oldMessages;
     private ArrayList<String> messages;
 
     private static final String STATE_ITEMS = "messages";
@@ -42,6 +57,8 @@ public class ChatActivity extends AppCompatActivity {
 
     private int counter = 0;
     private String response = "";
+
+    private boolean keyboardVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,15 +78,14 @@ public class ChatActivity extends AppCompatActivity {
         database = FirebaseDatabase.getInstance();
         myRef = database.getReference("data");
 
-        //sendChatButton = (Button)findViewById(R.id.sendChatButton);
-
         ListView chatListView = (ListView)findViewById(R.id.chatListView);
 
         if (savedInstanceState != null) {
             messages = (ArrayList<String>)savedInstanceState.getSerializable(STATE_ITEMS);
         }else{
             messages = new ArrayList<>();
-            messages.add("Hello, welcome to the " + activeModule + " module survey, how are you today?");
+            messages.add("Hello, welcome to the " + activeModule +
+                    " module survey, how are you today?");
         }
 
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, messages);
@@ -77,14 +93,36 @@ public class ChatActivity extends AppCompatActivity {
 
         chatEditText = (EditText)findViewById(R.id.chatEditText);
 
+        chatEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    ListView chatListView = (ListView)findViewById(R.id.chatListView);
+                    ViewGroup.LayoutParams params = chatListView.getLayoutParams();
+                    params.height = 950;
+                    chatListView.setLayoutParams(params);
+                    chatListView.setSelection(adapter.getCount() - 1);
+                    keyboardVisible = false;
+                }
+                return false;
+            }
+        });
+        chatEditText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ListView chatListView = (ListView)findViewById(R.id.chatListView);
+                ViewGroup.LayoutParams params = chatListView.getLayoutParams();
+                params.height = 488;
+                chatListView.setLayoutParams(params);
+                chatListView.setSelection(adapter.getCount() - 1);
+                keyboardVisible = true;
+            }
+        });
+
     }
 
     public void sendChat(View view){
-
         ListView chatListView = (ListView)findViewById(R.id.chatListView);
-        ViewGroup.LayoutParams params = chatListView.getLayoutParams();
-        params.height = 488;
-        chatListView.setLayoutParams(params);
 
         chatEditText = (EditText)findViewById(R.id.chatEditText);
 
@@ -100,19 +138,10 @@ public class ChatActivity extends AppCompatActivity {
 
         //DatabaseReference messagesRef = myRef.child("messages").child(id).setValue(message);
         myRef.child("messages").child(id).setValue(message);
-        //messagesRef.setValue(message);
 
         Log.i("Message saved", message.toString());
         Toast.makeText(ChatActivity.this,  "Message sent", Toast.LENGTH_SHORT).show();
         chatEditText.setText("");
-
-        // So that the keyboard hides after send button is clicked
-        /*try {
-            InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-        } catch (Exception e) {
-            // TODO: handle exception
-        }*/
 
         sendResponse();
         chatListView.setSelection(adapter.getCount() - 1);
@@ -153,5 +182,9 @@ public class ChatActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putSerializable(STATE_ITEMS, messages);
     }
+
+    /*private void getSavedConversation(){
+
+    }*/
 
 }

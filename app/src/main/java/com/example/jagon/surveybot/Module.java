@@ -1,11 +1,16 @@
 package com.example.jagon.surveybot;
 
+import java.util.UUID;
+
 public class Module {
     private String id;
     private String title;
 
-    public Module(String id, String title) {
-        this.id = id;
+    public Module() {
+    }
+
+    public Module(String title) {
+        this.id = UUID.randomUUID().toString();
         this.title = title;
     }
 

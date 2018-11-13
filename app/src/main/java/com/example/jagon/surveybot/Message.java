@@ -8,6 +8,9 @@ public class Message {
     private String message;
     private String userId;
 
+    public Message() {
+    }
+
     public Message(String moduleName, String message, String userId) {
         this.id = UUID.randomUUID().toString();
         this.moduleName = moduleName;

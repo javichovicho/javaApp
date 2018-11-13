@@ -2,6 +2,7 @@ package com.example.jagon.surveybot;
 
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -42,10 +44,14 @@ public class SecondActivity extends AppCompatActivity {
     private FirebaseUser user;
     private DatabaseReference databaseReference;
     private DatabaseReference databaseReferenceChild;
+    private DatabaseReference databaseReferenceModules;
+    private FirebaseDatabase database;
 
     private ArrayList<User> users;
     private ArrayAdapter<User> adapter;
     private User usuario;
+    private Module module1;
+    private ListView modulesListView;
 
 
     @Override
@@ -57,7 +63,7 @@ public class SecondActivity extends AppCompatActivity {
 
         firebaseAuth = FirebaseAuth.getInstance();
 
-        ListView modulesListView = (ListView)findViewById(R.id.modulesListView);
+        modulesListView = (ListView)findViewById(R.id.modulesListView);
         greetingTextView = (TextView)findViewById(R.id.textViewGreeting);
 
         firebaseAuth = FirebaseAuth.getInstance();
@@ -83,7 +89,7 @@ public class SecondActivity extends AppCompatActivity {
             }
         });
 
-        //greeting += " " + userName + "!";
+        // At the moment greeting is just Hi
         greetingTextView.setText(greeting);
 
         modulesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -95,11 +101,33 @@ public class SecondActivity extends AppCompatActivity {
             }
         });
 
-        modules.add("Introduction to Databases");
-        modules.add("Software Development");
-
+        // Uploading a model to the database
+        /*
+        Module module1 = new Module("Introduction to Databases");
+        database = FirebaseDatabase.getInstance();
+        databaseReferenceModules = database.getReference("Module data");
+        databaseReferenceModules.child("modules").child(module1.getId()).setValue(module1);
+        */
+        // Retrieving a list of all models in database
         arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, modules);
-        modulesListView.setAdapter(arrayAdapter);
+        module1 = new Module();
+        database = FirebaseDatabase.getInstance();
+        databaseReferenceModules = database.getReference("Module data/modules");
+        databaseReferenceModules.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for(DataSnapshot snapshot: dataSnapshot.getChildren()){
+                    module1 = snapshot.getValue(Module.class);
+                    modules.add(module1.getTitle());
+                }
+                modulesListView.setAdapter(arrayAdapter);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
 
     }
 
