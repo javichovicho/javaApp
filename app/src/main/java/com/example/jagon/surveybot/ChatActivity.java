@@ -29,9 +29,15 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class ChatActivity extends AppCompatActivity {
+
+    private int lastCount;
 
     private String activeModule = "";
 
@@ -58,6 +64,9 @@ public class ChatActivity extends AppCompatActivity {
     private String response = "";
 
     private boolean messageHistoryNotRetrieved = true;
+
+    private Date date = new Date();
+    private DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +104,7 @@ public class ChatActivity extends AppCompatActivity {
             conversationReference = database.getReference("data/messages");
             // If addValueEventListener method was used it would update constantly
             // Another alternative is addChildEventListener(new ChildEventListener)
-            conversationReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            conversationReference.orderByChild("timeStamp").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     for(DataSnapshot snapshot: dataSnapshot.getChildren()){
@@ -151,28 +160,38 @@ public class ChatActivity extends AppCompatActivity {
 
         chatEditText = (EditText)findViewById(R.id.chatEditText);
 
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        String uid = user.getUid();
+        if(chatEditText.getText().toString().isEmpty()) {
+            Toast.makeText(ChatActivity.this, "Message empty", Toast.LENGTH_SHORT).show();
+        }else{
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            String uid = user.getUid();
 
-        message = new Message(activeModule, chatEditText.getText().toString(), uid);
-        messages.add("> " + message.getMessage());
+            message = new Message(activeModule, chatEditText.getText().toString(), uid, dateFormat.format(date));
+            // message.setCount(lastCount++);
+            messages.add("> " + message.getMessage());
 
-        adapter.notifyDataSetChanged();
+            adapter.notifyDataSetChanged();
 
-        String id = message.getId();
+            String id = message.getId();
 
-        myRef.child("messages").child(id).setValue(message);
+            myRef.child("messages").child(id).setValue(message);
 
-        Log.i("Message saved", message.toString());
-        Toast.makeText(ChatActivity.this,  "Message sent", Toast.LENGTH_SHORT).show();
-        chatEditText.setText("");
+            Log.i("Message saved", message.toString());
+            Toast.makeText(ChatActivity.this,  "Message sent", Toast.LENGTH_SHORT).show();
+            chatEditText.setText("");
 
-        sendResponse();
-        chatListView.setSelection(adapter.getCount() - 1);
+            sendResponse();
+            chatListView.setSelection(adapter.getCount() - 1);
+        }
     }
 
     public void sendResponse(){
 
+        try{
+            TimeUnit.MILLISECONDS.sleep(250);
+        }catch(InterruptedException e){
+            Log.i("Exception", e.toString());
+        }
         if(messages.get(counter + 1).equalsIgnoreCase("> I'm good thanks")) {
             response = "That's great, how about you answer some questions now?";
             messages.add(response);
@@ -197,7 +216,9 @@ public class ChatActivity extends AppCompatActivity {
             adapter.notifyDataSetChanged();
         }
         String botId = "Bot";
-        botMessage = new Message(activeModule, response, botId);
+        botMessage = new Message(activeModule, response, botId, dateFormat.format(date));
+        // botMessage.setCount(lastCount++);
+
         String responseId = botMessage.getId();
         myRef.child("messages").child(responseId).setValue(botMessage);
     }

@@ -1,21 +1,43 @@
 package com.example.jagon.surveybot;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Message {
     private String id;
     private String moduleName;
     private String message;
     private String userId;
+    private String timeStamp;
+    private static final AtomicInteger increment = new AtomicInteger(0);
+    private int count;
 
     public Message() {
     }
 
-    public Message(String moduleName, String message, String userId) {
+    public Message(String moduleName, String message, String userId, String timeStamp) {
         this.id = UUID.randomUUID().toString();
         this.moduleName = moduleName;
         this.message = message;
         this.userId = userId;
+        this.timeStamp = timeStamp;
+        this.count = increment.incrementAndGet();
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+
+    public String getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(String timeStamp) {
+        this.timeStamp = timeStamp;
     }
 
     public String getId() {
@@ -57,6 +79,8 @@ public class Message {
                 ", moduleName='" + moduleName + '\'' +
                 ", message='" + message + '\'' +
                 ", userId='" + userId + '\'' +
+                ", timeStamp='" + timeStamp + '\'' +
+                ", count=" + count + '\'' +
                 '}';
     }
 }
