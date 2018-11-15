@@ -1,7 +1,6 @@
 package com.example.jagon.surveybot;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Message {
     private String id;
@@ -9,8 +8,6 @@ public class Message {
     private String message;
     private String userId;
     private String timeStamp;
-    private static final AtomicInteger increment = new AtomicInteger(0);
-    private int count;
 
     public Message() {
     }
@@ -21,15 +18,6 @@ public class Message {
         this.message = message;
         this.userId = userId;
         this.timeStamp = timeStamp;
-        this.count = increment.incrementAndGet();
-    }
-
-    public int getCount() {
-        return count;
-    }
-
-    public void setCount(int count) {
-        this.count = count;
     }
 
     public String getTimeStamp() {
@@ -80,7 +68,6 @@ public class Message {
                 ", message='" + message + '\'' +
                 ", userId='" + userId + '\'' +
                 ", timeStamp='" + timeStamp + '\'' +
-                ", count=" + count + '\'' +
                 '}';
     }
 }

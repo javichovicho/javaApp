@@ -65,8 +65,8 @@ public class ChatActivity extends AppCompatActivity {
 
     private boolean messageHistoryNotRetrieved = true;
 
-    private Date date = new Date();
-    private DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    private Date date;
+    private DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -166,6 +166,7 @@ public class ChatActivity extends AppCompatActivity {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
             String uid = user.getUid();
 
+            date = new Date();
             message = new Message(activeModule, chatEditText.getText().toString(), uid, dateFormat.format(date));
             // message.setCount(lastCount++);
             messages.add("> " + message.getMessage());
@@ -216,6 +217,7 @@ public class ChatActivity extends AppCompatActivity {
             adapter.notifyDataSetChanged();
         }
         String botId = "Bot";
+        date = new Date();
         botMessage = new Message(activeModule, response, botId, dateFormat.format(date));
         // botMessage.setCount(lastCount++);
 
