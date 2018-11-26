@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,14 +23,13 @@ public class MainActivity extends AppCompatActivity {
     private EditText Email;
     private EditText Password;
     private TextView Info;
-    private Button Login;
-    private int counter = 5;
     private TextView userRegistration;
     private TextView passwordRecovery;
+    private Button Login;
+    private int counter = 5;
+    private boolean emailVerified;
 
-    // instance of firebase authentication library
     private FirebaseAuth firebaseAuth;
-    // progress dialog
     private ProgressDialog progressDialog;
 
     @Override
@@ -40,16 +40,15 @@ public class MainActivity extends AppCompatActivity {
         Email = (EditText)findViewById(R.id.email);
         Password = (EditText)findViewById(R.id.password);
         Info = (TextView)findViewById(R.id.info);
+        passwordRecovery = (TextView)findViewById(R.id.textViewPasswordRecovery);
         userRegistration = (Button)findViewById(R.id.registration);
         Login = (Button)findViewById(R.id.loginButton);
 
-        passwordRecovery = (TextView)findViewById(R.id.textViewPasswordRecovery);
-
         firebaseAuth = FirebaseAuth.getInstance();
         progressDialog = new ProgressDialog(this);
-        // instance of logged in user
-        FirebaseUser user = firebaseAuth.getCurrentUser();
 
+        // The following checks for a signed in User
+        FirebaseUser user = firebaseAuth.getCurrentUser();
         if(user != null){
             finish();
             startActivity(new Intent(MainActivity.this, SecondActivity.class));
@@ -58,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         Login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                validate(Email.getText().toString(), Password.getText().toString());
+                validateUserLoginDetails(Email.getText().toString(), Password.getText().toString());
             }
         });
 
@@ -77,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-    private void validate(String userEmail, String userPassword){
+    private void validateUserLoginDetails(String userEmail, String userPassword){
 
         progressDialog.setMessage("Verifying account...");
         progressDialog.show();
@@ -87,8 +86,6 @@ public class MainActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if(task.isSuccessful()){
                     progressDialog.dismiss();
-                    // Toast.makeText(MainActivity.this,  "Login Successful", Toast.LENGTH_SHORT).show();
-                    // startActivity(new Intent(MainActivity.this, SecondActivity.class));
                     emailVerificationCheck();
                 }else{
                     Toast.makeText(MainActivity.this,  "Login Failed", Toast.LENGTH_SHORT).show();
@@ -104,9 +101,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void emailVerificationCheck(){
         FirebaseUser firebaseUser = firebaseAuth.getInstance().getCurrentUser();
-        boolean emailVerified = firebaseUser.isEmailVerified();
+
+        try {
+            emailVerified = firebaseUser.isEmailVerified();
+        }catch(NullPointerException e){
+            Log.i("Exception", e.toString());
+        }
 
         if(emailVerified){
+            // Toast.makeText(MainActivity.this,  "Login Successful", Toast.LENGTH_SHORT).show();
             finish();
             startActivity(new Intent(MainActivity.this, SecondActivity.class));
         }else{

@@ -4,10 +4,10 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -24,7 +24,6 @@ public class RegistrationActivity extends AppCompatActivity {
     private Button registerButton;
     private Button Login;
     private FirebaseAuth firebaseAuth;
-
     private FirebaseDatabase database;
     private DatabaseReference myRef;
 
@@ -32,10 +31,14 @@ public class RegistrationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registration);
-        setUIViews();
+
+        firstName = (EditText)findViewById(R.id.firstName);
+        lastName = (EditText)findViewById(R.id.lastName);
+        userEmail = (EditText)findViewById(R.id.email);
+        userPassword = (EditText)findViewById(R.id.password);
+        registerButton = (Button)findViewById(R.id.button);
 
         firebaseAuth = FirebaseAuth.getInstance();
-
 
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -50,13 +53,6 @@ public class RegistrationActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if(task.isSuccessful()){
-                                /*
-                                Toast.makeText(RegistrationActivity.this,
-                                        "Registration successful", Toast.LENGTH_SHORT).show();
-                                storeUserInfo(firstName.getText().toString(), lastName.getText().toString(),
-                                        userPassword.getText().toString(), userEmail.getText().toString());
-                                startActivity(new Intent(RegistrationActivity.this, MainActivity.class));
-                                */
                                 sendVerificationEmail();
                             }else{
                                 Toast.makeText(RegistrationActivity.this,
@@ -76,14 +72,6 @@ public class RegistrationActivity extends AppCompatActivity {
         });
     }
 
-    private void setUIViews(){
-        firstName = (EditText)findViewById(R.id.firstName);
-        lastName = (EditText)findViewById(R.id.lastName);
-        userEmail = (EditText)findViewById(R.id.email);
-        userPassword = (EditText)findViewById(R.id.password);
-        registerButton = (Button)findViewById(R.id.button);
-    }
-
     private Boolean validate() {
         Boolean result = false;
         String name = firstName.getText().toString();
@@ -91,7 +79,7 @@ public class RegistrationActivity extends AppCompatActivity {
         String password = userPassword.getText().toString();
         String email = userEmail.getText().toString();
 
-        if (name.isEmpty() || password.isEmpty() || email.isEmpty()) {
+        if (name.isEmpty() || password.isEmpty() || email.isEmpty() || surname.isEmpty()) {
             Toast.makeText(this, "Please enter all details", Toast.LENGTH_SHORT);
         } else {
             result = true;
@@ -101,9 +89,16 @@ public class RegistrationActivity extends AppCompatActivity {
 
     private void storeUserInfo(String name, String surname, String password, String email){
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        String uid = user.getUid();
-        User newUser = new User(name, surname, email, password, uid);
+        User newUser;
+        String uid = "";
 
+        try {
+            uid = user.getUid();
+        }catch(NullPointerException e){
+            Log.i("Exception thrown", e.toString());
+        }
+
+        newUser = new User(name, surname, email, password, uid);
         database = FirebaseDatabase.getInstance();
         myRef = database.getReference("User data");
         myRef.child("users").child(uid).setValue(newUser);

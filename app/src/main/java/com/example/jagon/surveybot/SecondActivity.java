@@ -31,34 +31,32 @@ import java.util.ArrayList;
 
 public class SecondActivity extends AppCompatActivity {
 
+    private final String TITLE = "Modules list";
+    private ListView modulesListView;
+    private TextView greetingTextView;
     private FirebaseAuth firebaseAuth;
+    private FirebaseUser user;
+    private String userId;
+    private DatabaseReference databaseReference;
+    private DatabaseReference databaseReferenceChild;
+    private String userName;
 
     ArrayList<String> modules = new ArrayList<>();
     ArrayAdapter<String> arrayAdapter;
 
-    private TextView greetingTextView;
-    private String userName;
-    private String userId;
     private String greeting = "Hi!";
 
-    private FirebaseUser user;
-    private DatabaseReference databaseReference;
-    private DatabaseReference databaseReferenceChild;
     private DatabaseReference databaseReferenceModules;
     private FirebaseDatabase database;
 
     private Module module1;
-    private ListView modulesListView;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        setTitle("Modules list");
-
-        firebaseAuth = FirebaseAuth.getInstance();
+        setTitle(TITLE);
 
         modulesListView = (ListView)findViewById(R.id.modulesListView);
         greetingTextView = (TextView)findViewById(R.id.textViewGreeting);
@@ -75,6 +73,7 @@ public class SecondActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 userName = dataSnapshot.child("name").getValue(String.class);
                 Log.i("info", userName + " - user name retrieved from database");
+                // This toast is overlapping login successful which is now disabled
                 Toast.makeText(SecondActivity.this, "Hi " + userName, Toast.LENGTH_LONG).show();
             }
 
@@ -125,8 +124,13 @@ public class SecondActivity extends AppCompatActivity {
         startActivity(new Intent(SecondActivity.this, MainActivity.class));
     }
     private void openModuleCreationActivity(){
-        finish();
         startActivity(new Intent(SecondActivity.this, ModuleCreationActivity.class));
+    }
+    private void openUserProfileActivity(){
+        startActivity(new Intent(SecondActivity.this, UserProfileActivity.class));
+    }
+    private void openDialogActivity(){
+        startActivity(new Intent(SecondActivity.this, DialogActivity.class));
     }
 
     @Override
@@ -142,9 +146,19 @@ public class SecondActivity extends AppCompatActivity {
         switch(item.getItemId()){
             case R.id.logoutButton:{
                 logout();
+                return true;
             }
             case R.id.moduleCreation:{
                 openModuleCreationActivity();
+                return true;
+            }
+            case R.id.editProfile:{
+                openUserProfileActivity();
+                return true;
+            }
+            case R.id.dialog:{
+                openDialogActivity();
+                return true;
             }
         }
         return super.onOptionsItemSelected(item);

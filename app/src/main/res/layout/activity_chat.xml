@@ -44,7 +44,7 @@
         android:layout_marginLeft="3dp"
         android:layout_marginRight="24dp"
         android:layout_marginStart="3dp"
-        android:onClick="sendChat"
+        android:onClick="sendMessage"
         android:text="Send"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

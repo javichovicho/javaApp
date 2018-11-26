@@ -18,6 +18,13 @@ public class User {
         this.uid = uid;
     }
 
+    public User(String name, String surname, String email, String uid) {
+        this.name = name;
+        this.surname = surname;
+        this.email = email;
+        this.uid = uid;
+    }
+
     public String getName() {
         return name;
     }

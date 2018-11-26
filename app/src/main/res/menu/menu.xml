@@ -16,4 +16,18 @@
         android:title="Module">
     </item>
 
+    <item
+        android:id="@+id/editProfile"
+        android:orderInCategory="300"
+        app:showAsAction="never"
+        android:title="Profile">
+    </item>
+
+    <item
+        android:id="@+id/dialog"
+        android:orderInCategory="400"
+        app:showAsAction="never"
+        android:title="Dialog">
+    </item>
+
 </menu>

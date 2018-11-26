@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.jagon.surveybot">
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -20,7 +21,10 @@
         <activity android:name=".SecondActivity" />
         <activity android:name=".ChatActivity" />
         <activity android:name=".PasswordRecoveryActivity" />
-        <activity android:name=".ModuleCreationActivity"></activity>
+        <activity android:name=".ModuleCreationActivity" />
+        <activity android:name=".UserProfileActivity" />
+        <activity android:name=".UpdateProfileActivity" />
+        <activity android:name=".DialogActivity"></activity>
     </application>
 
 </manifest>

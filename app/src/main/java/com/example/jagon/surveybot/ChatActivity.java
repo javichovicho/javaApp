@@ -37,28 +37,30 @@ import java.util.concurrent.TimeUnit;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private int lastCount;
-
     private String activeModule = "";
-
-    private FirebaseDatabase database;
-    private DatabaseReference myRef;
+    private Intent intent;
     private FirebaseAuth firebaseAuth;
-    private FirebaseUser user;
+    private FirebaseUser firebaseUser;
     private String userId;
-    private Message mensaje;
-
+    private FirebaseDatabase database;
+    private ListView chatListView;
+    private ArrayList<String> messages;
+    private ArrayAdapter adapter;
+    private Message retrievedMessage;
     private Message message;
+    private String messageId;
     private Message botMessage;
     private EditText chatEditText;
-    private ListView chatListView;
-
-    private DatabaseReference conversationReference;
-    private ArrayList<String> messages;
-
+    private final int FULL_HEIGHT = 950;
+    private final int MEDIUM_HEIGHT = 488;
+    private DatabaseReference messageDataReference;
+    private DatabaseReference individualMessagesReference;
+    private final String DATA_PATH = "data";
+    private final String MESSAGE_PATH = "data/messages";
+    private final String BLANK = "";
     private static final String STATE_ITEMS = "messages";
-
-    private ArrayAdapter<String> adapter;
+    private static final String BOT_ID = "Bot";
+    private String temporaryUserId = "";
 
     private int counter = 0;
     private String response = "";
@@ -73,20 +75,21 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
+        // The following prevents the keyboard from displaying automatically when activity starts
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
-        Intent intent = getIntent();
+        intent = getIntent();
         activeModule = intent.getStringExtra("moduleName");
 
         setTitle(activeModule);
         Log.i("Info", activeModule);
         firebaseAuth = FirebaseAuth.getInstance();
-        user = firebaseAuth.getCurrentUser();
-        userId = user.getUid();
+        firebaseUser = firebaseAuth.getCurrentUser();
+        userId = firebaseUser.getUid();
 
         database = FirebaseDatabase.getInstance();
-        myRef = database.getReference("data");
+        messageDataReference = database.getReference(DATA_PATH);
 
         chatListView = (ListView)findViewById(R.id.chatListView);
 
@@ -100,19 +103,25 @@ public class ChatActivity extends AppCompatActivity {
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, messages);
         chatListView.setAdapter(adapter);
         if(messageHistoryNotRetrieved){
-            mensaje = new Message();
-            conversationReference = database.getReference("data/messages");
+            retrievedMessage = new Message();
+            individualMessagesReference = database.getReference(MESSAGE_PATH);
             // If addValueEventListener method was used it would update constantly
             // Another alternative is addChildEventListener(new ChildEventListener)
-            conversationReference.orderByChild("timeStamp").addListenerForSingleValueEvent(new ValueEventListener() {
+            individualMessagesReference.orderByChild("timeStamp").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     for(DataSnapshot snapshot: dataSnapshot.getChildren()){
-                        mensaje = snapshot.getValue(Message.class);
-                        if((mensaje.getUserId().equals(userId) || mensaje.getUserId().equals("Bot")) &&
-                                mensaje.getModuleName().equals(activeModule)){
-                            Log.i("Message retrieved", mensaje.getMessage());
-                            String temp = mensaje.getMessage();
+                        retrievedMessage = snapshot.getValue(Message.class);
+                        try {
+                            temporaryUserId = retrievedMessage.getUserId();
+                        }catch(NullPointerException e){
+                            Log.i("Exception", e.toString());
+                        }
+                        if((temporaryUserId.equals(userId) ||
+                                retrievedMessage.getUserId().equals("Bot")) &&
+                                retrievedMessage.getModuleName().equals(activeModule)){
+                            Log.i("Message retrieved", retrievedMessage.getMessage());
+                            String temp = retrievedMessage.getMessage();
                             messages.add(temp);
                         }
                         chatListView.setAdapter(adapter);
@@ -121,7 +130,7 @@ public class ChatActivity extends AppCompatActivity {
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                    Toast.makeText(ChatActivity.this, databaseError.getCode(), Toast.LENGTH_SHORT).show();
                 }
             });
             messageHistoryNotRetrieved = false;
@@ -133,11 +142,12 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    ListView chatListView = (ListView)findViewById(R.id.chatListView);
+                    // ListView chatListView = (ListView)findViewById(R.id.chatListView);
                     ViewGroup.LayoutParams params = chatListView.getLayoutParams();
-                    params.height = 950;
+                    params.height = FULL_HEIGHT;
                     chatListView.setLayoutParams(params);
-                    chatListView.setSelection(adapter.getCount() - 1);
+                    // The following scrolls the list view to the last message
+                    scrollListView();
                 }
                 return false;
             }
@@ -145,54 +155,48 @@ public class ChatActivity extends AppCompatActivity {
         chatEditText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ListView chatListView = (ListView)findViewById(R.id.chatListView);
+                // ListView chatListView = (ListView)findViewById(R.id.chatListView);
                 ViewGroup.LayoutParams params = chatListView.getLayoutParams();
-                params.height = 488;
+                params.height = MEDIUM_HEIGHT;
                 chatListView.setLayoutParams(params);
-                chatListView.setSelection(adapter.getCount() - 1);
+                scrollListView();
             }
         });
 
     }
 
-    public void sendChat(View view){
-        ListView chatListView = (ListView)findViewById(R.id.chatListView);
-
-        chatEditText = (EditText)findViewById(R.id.chatEditText);
+    public void sendMessage(View view){
+        // ListView chatListView = (ListView)findViewById(R.id.chatListView);
+        // chatEditText = (EditText)findViewById(R.id.chatEditText);
 
         if(chatEditText.getText().toString().isEmpty()) {
             Toast.makeText(ChatActivity.this, "Message empty", Toast.LENGTH_SHORT).show();
         }else{
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            String uid = user.getUid();
+            userId = user.getUid();
 
             date = new Date();
-            message = new Message(activeModule, chatEditText.getText().toString(), uid, dateFormat.format(date));
-            // message.setCount(lastCount++);
+            message = new Message(activeModule, chatEditText.getText().toString(), userId, dateFormat.format(date));
             messages.add("> " + message.getMessage());
 
             adapter.notifyDataSetChanged();
 
-            String id = message.getId();
+            messageId = message.getId();
 
-            myRef.child("messages").child(id).setValue(message);
+            messageDataReference.child("messages").child(messageId).setValue(message);
 
             Log.i("Message saved", message.toString());
             Toast.makeText(ChatActivity.this,  "Message sent", Toast.LENGTH_SHORT).show();
-            chatEditText.setText("");
+            chatEditText.setText(BLANK);
 
             sendResponse();
-            chatListView.setSelection(adapter.getCount() - 1);
+            scrollListView();
         }
     }
 
     public void sendResponse(){
 
-        try{
-            TimeUnit.MILLISECONDS.sleep(250);
-        }catch(InterruptedException e){
-            Log.i("Exception", e.toString());
-        }
+        produceShortPause();
         if(messages.get(counter + 1).equalsIgnoreCase("> I'm good thanks")) {
             response = "That's great, how about you answer some questions now?";
             messages.add(response);
@@ -212,19 +216,25 @@ public class ChatActivity extends AppCompatActivity {
         }
         counter++;
         if(counter > 1){
-            // messages.remove(0);
-            // messages.remove(1);
             adapter.notifyDataSetChanged();
         }
-        String botId = "Bot";
         date = new Date();
-        botMessage = new Message(activeModule, response, botId, dateFormat.format(date));
-        // botMessage.setCount(lastCount++);
-
-        String responseId = botMessage.getId();
-        myRef.child("messages").child(responseId).setValue(botMessage);
+        botMessage = new Message(activeModule, response, BOT_ID, dateFormat.format(date));
+        messageDataReference.child("messages").child(botMessage.getId()).setValue(botMessage);
     }
 
+    private void scrollListView(){
+        chatListView.setSelection(adapter.getCount() - 1);
+    }
+    private void produceShortPause(){
+        try{
+            TimeUnit.MILLISECONDS.sleep(250);
+        }catch(InterruptedException e){
+            Log.i("Exception", e.toString());
+        }
+    }
+
+    //
     protected void onSaveInstanceState(Bundle outState){
         super.onSaveInstanceState(outState);
         outState.putSerializable(STATE_ITEMS, messages);
