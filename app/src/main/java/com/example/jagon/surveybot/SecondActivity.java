@@ -89,7 +89,11 @@ public class SecondActivity extends AppCompatActivity {
         modulesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+                //Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+
+                // link to SurveyActivity
+                Intent intent = new Intent(getApplicationContext(), SurveyActivity.class);
+
                 intent.putExtra("moduleName", modules.get(position));
                 startActivity(intent);
             }
@@ -129,9 +133,12 @@ public class SecondActivity extends AppCompatActivity {
     private void openUserProfileActivity(){
         startActivity(new Intent(SecondActivity.this, UserProfileActivity.class));
     }
-    private void openDialogActivity(){
+    /*private void openDialogActivity(){
         startActivity(new Intent(SecondActivity.this, DialogActivity.class));
     }
+    private void openSurveyActivity(){
+        startActivity(new Intent(SecondActivity.this, SurveyActivity.class));
+    }*/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -156,10 +163,14 @@ public class SecondActivity extends AppCompatActivity {
                 openUserProfileActivity();
                 return true;
             }
-            case R.id.dialog:{
+            /*case R.id.dialog:{
                 openDialogActivity();
                 return true;
             }
+            case R.id.surveyTemp:{
+                openSurveyActivity();
+                return true;
+            }*/
         }
         return super.onOptionsItemSelected(item);
     }

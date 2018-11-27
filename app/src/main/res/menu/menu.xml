@@ -30,4 +30,11 @@
         android:title="Dialog">
     </item>
 
+    <item
+        android:id="@+id/surveyTemp"
+        android:orderInCategory="500"
+        app:showAsAction="never"
+        android:title="Survey">
+    </item>
+
 </menu>

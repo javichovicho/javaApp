@@ -22,19 +22,11 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.gson.JsonElement;
 
-import ai.api.AIListener;
-import ai.api.android.AIConfiguration;
 import ai.api.android.AIService;
-import ai.api.model.AIError;
-import ai.api.model.AIResponse;
-import ai.api.model.Result;
-
-import java.util.Map;
 import java.util.Random;
 
-public class DialogActivity extends AppCompatActivity implements AIListener {
+public class DialogActivity extends AppCompatActivity {
 
     private ChatView mChatView;
     private FirebaseAuth firebaseAuth;
@@ -43,20 +35,10 @@ public class DialogActivity extends AppCompatActivity implements AIListener {
     private String userId;
     private TextView userName;
 
-    private AIService aiService;
-    private String output;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dialog);
-
-        final AIConfiguration config = new AIConfiguration("45c92c4edf424d9ba2a23588beacb570",
-                AIConfiguration.SupportedLanguages.English,
-                AIConfiguration.RecognitionEngine.System);
-
-        aiService = AIService.getService(this, config);
-        aiService.setListener(this);
 
         //User id
         int myId = 0;
@@ -162,37 +144,4 @@ public class DialogActivity extends AppCompatActivity implements AIListener {
         });
     }
 
-    public void onResult(final AIResponse response) {
-        Result result = response.getResult();
-
-        // Get parameters
-        String parameterString = "";
-        if (result.getParameters() != null && !result.getParameters().isEmpty()) {
-            for (final Map.Entry<String, JsonElement> entry : result.getParameters().entrySet()) {
-                parameterString += "(" + entry.getKey() + ", " + entry.getValue() + ") ";
-            }
-        }
-
-        // Show results.
-        output = ("Query:" + result.getResolvedQuery() +
-                "\nAction: " + result.getAction() +
-                "\nParameters: " + parameterString +
-                "\nFulfillment: " + result.getFulfillment().getSpeech());
-    }
-
-    @Override
-    public void onError(final AIError error) {
-        // print error
-    }
-    @Override
-    public void onListeningStarted() {}
-
-    @Override
-    public void onListeningCanceled() {}
-
-    @Override
-    public void onListeningFinished() {}
-
-    @Override
-    public void onAudioLevel(final float level) {}
 }

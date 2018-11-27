@@ -91,6 +91,7 @@ public class ChatActivity extends AppCompatActivity {
         database = FirebaseDatabase.getInstance();
         messageDataReference = database.getReference(DATA_PATH);
 
+        /* MESSAGES RETRIEVING
         chatListView = (ListView)findViewById(R.id.chatListView);
 
         if (savedInstanceState != null) {
@@ -162,6 +163,7 @@ public class ChatActivity extends AppCompatActivity {
                 scrollListView();
             }
         });
+        */
 
     }
 
